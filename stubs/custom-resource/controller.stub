@@ -1,0 +1,70 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use App\DataTables\{{ model }}sDataTable;
+use App\Http\Requests\{{ model }}Request;
+use App\Models\{{ model }};
+use DB;
+use Illuminate\Http\Request;
+use App\Http\Traits\DataTable;
+
+class {{ model }}sController extends Controller
+{
+    use DataTable;
+
+    public function __construct()
+    {
+        $this->authorizeResource({{ model }}::class);
+    }
+
+    public function index(Request $request, {{ model }}sDataTable $dataTable)
+    {
+        return $this->renderDataTable($request, $dataTable, '{{ viewPath }}.index');
+    }
+
+    public function create()
+    {
+        return view('{{ viewPath }}.form');
+    }
+
+    public function store({{ model }}Request $request)
+    {
+        DB::transaction(function () use ($request) {
+            ${{ modelVariable }} = {{ model }}::create($request->getData());
+            ${{ modelVariable }}->assignRole($request->role_name);
+        });
+
+        return redirect()->route('{{ routeName }}.index')->with('success', '{{ model }} created successfully.');
+    }
+
+    public function show({{ model }} ${{ modelVariable }})
+    {
+        return view('{{ viewPath }}.show', compact('{{ modelVariable }}'));
+    }
+
+    public function edit({{ model }} ${{ modelVariable }})
+    {
+        return view('{{ viewPath }}.form', compact('{{ modelVariable }}'));
+    }
+
+    public function update({{ model }}Request $request, {{ model }} ${{ modelVariable }})
+    {
+        DB::transaction(function () use ($request, ${{ modelVariable }}) {
+            $data = $request->getData();
+            ${{ modelVariable }}->update($data);
+        });
+
+        return redirect()->route('{{ routeName }}.index')->with('success', '{{ model }} updated successfully.');
+    }
+
+    public function destroy({{ model }} ${{ modelVariable }}, Request $request)
+    {
+        DB::transaction(function () use (${{ modelVariable }}) {
+            ${{ modelVariable }}->delete();
+        });
+
+        return redirect()->route('{{ routeName }}.index')->with('success', '{{ model }} deleted successfully.');
+    }
+
+}

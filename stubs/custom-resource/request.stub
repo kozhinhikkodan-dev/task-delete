@@ -1,0 +1,65 @@
+<?php
+
+namespace App\Http\Requests;
+
+use App\Models\{{ model }};
+use Illuminate\Foundation\Http\FormRequest;
+
+class {{ model }}Request extends FormRequest
+{
+    /**
+     * Determine if the user is authorized to make this request.
+     */
+    public function authorize(): bool
+    {
+        return true;
+    }
+
+    /**
+     * Get the validation rules that apply to the request.
+     *
+     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
+     */
+    public function rules(): array
+    {
+        // Common Rules
+        $rules = [
+            
+        ];
+
+        // update request specific rules
+        if($this->isMethod('PUT')){
+            ${{ modelVariable }} = $this->route('{{ modelVariable }}');
+            // $rules['name'] = 'required|max:20|unique:users,name' . ($user ? ',' . $user->id : '');
+        }
+         
+        return $rules;
+    }
+
+
+    public function attributes(): array
+    {
+        return [
+            
+        ];
+    }
+
+    public function messages()
+    {
+        return [
+          
+        ];
+    }
+
+    public function getData(): array
+    {
+        return $this->validationData();
+    }
+
+    public function prepareForValidation(): void
+    {
+    }
+
+
+
+}

@@ -1,0 +1,256 @@
+// View Toggle Switch Component
+.view-toggle-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.view-toggle-wrapper {
+    position: relative;
+    margin: 0 1rem;
+}
+
+.view-toggle-switch {
+    position: relative;
+    display: inline-block;
+}
+
+.view-toggle-input {
+    display: none;
+}
+
+.view-toggle-label {
+    display: flex;
+    align-items: center;
+    background: var(--#{$prefix}light);
+    border: 2px solid var(--#{$prefix}border-color);
+    border-radius: 50px;
+    padding: 4px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    position: relative;
+    min-width: 200px;
+    height: 50px;
+    user-select: none;
+    
+    &:hover {
+        border-color: var(--#{$prefix}primary);
+        box-shadow: 0 0 0 0.2rem rgba(var(--#{$prefix}primary-rgb), 0.25);
+    }
+    
+    &.changing {
+        .view-toggle-slider {
+            transform: translateX(50%) scale(0.9);
+        }
+    }
+}
+
+.view-toggle-option {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 8px 16px;
+    border-radius: 25px;
+    transition: all 0.3s ease;
+    position: relative;
+    z-index: 2;
+    font-weight: $font-weight-medium;
+    font-size: 0.875rem;
+    
+    i {
+        margin-right: 6px;
+        font-size: 1.1rem;
+    }
+    
+    .view-toggle-text {
+        white-space: nowrap;
+    }
+}
+
+.view-toggle-slider {
+    position: absolute;
+    top: 4px;
+    left: 4px;
+    width: calc(50% - 4px);
+    height: calc(100% - 8px);
+    background: $white;
+    border-radius: 25px;
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    z-index: 1;
+    
+    &::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: linear-gradient(135deg, var(--#{$prefix}primary), lighten($primary, 10%));
+        border-radius: 25px;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+    }
+}
+
+// When table view is active (checkbox unchecked)
+.view-toggle-input:not(:checked) + .view-toggle-label {
+    .view-toggle-table {
+        color: var(--#{$prefix}primary);
+        font-weight: $font-weight-semibold;
+    }
+    
+    .view-toggle-calendar {
+        color: var(--#{$prefix}secondary);
+    }
+    
+    .view-toggle-slider {
+        transform: translateX(0);
+        
+        &::before {
+            opacity: 0.1;
+        }
+    }
+}
+
+// When calendar view is active (checkbox checked)
+.view-toggle-input:checked + .view-toggle-label {
+    .view-toggle-table {
+        color: var(--#{$prefix}secondary);
+    }
+    
+    .view-toggle-calendar {
+        color: var(--#{$prefix}primary);
+        font-weight: $font-weight-semibold;
+    }
+    
+    .view-toggle-slider {
+        transform: translateX(100%);
+        
+        &::before {
+            opacity: 0.1;
+        }
+    }
+}
+
+// Hover effects
+.view-toggle-label:hover {
+    .view-toggle-slider::before {
+        opacity: 0.2;
+    }
+}
+
+// Active/Focus states
+.view-toggle-input:focus + .view-toggle-label {
+    outline: 2px solid var(--#{$prefix}primary);
+    outline-offset: 2px;
+}
+
+// Disabled state
+.view-toggle-input:disabled + .view-toggle-label {
+    opacity: 0.7;
+    cursor: not-allowed;
+    pointer-events: none;
+}
+
+// Responsive design
+@include media-breakpoint-down(sm) {
+    .view-toggle-label {
+        min-width: 160px;
+        height: 44px;
+        
+        .view-toggle-option {
+            padding: 6px 12px;
+            font-size: 0.8rem;
+            
+            i {
+                margin-right: 4px;
+                font-size: 1rem;
+            }
+        }
+    }
+    
+    .view-toggle-text {
+        display: none;
+    }
+    
+    .view-toggle-option {
+        i {
+            margin-right: 0 !important;
+        }
+    }
+}
+
+@include media-breakpoint-down(xs) {
+    .view-toggle-label {
+        min-width: 120px;
+        height: 40px;
+    }
+}
+
+// Dark mode support
+@media (prefers-color-scheme: dark) {
+    .view-toggle-label {
+        background: var(--#{$prefix}dark);
+        border-color: var(--#{$prefix}gray-600);
+    }
+    
+    .view-toggle-slider {
+        background: var(--#{$prefix}gray-800);
+    }
+}
+
+// Animation keyframes
+@keyframes toggleSlide {
+    0% {
+        transform: translateX(0) scale(1);
+    }
+    50% {
+        transform: translateX(50%) scale(0.9);
+    }
+    100% {
+        transform: translateX(100%) scale(1);
+    }
+}
+
+// Loading state
+.view-toggle-loading {
+    .view-toggle-slider {
+        animation: pulse 1s infinite;
+    }
+}
+
+@keyframes pulse {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.5;
+    }
+}
+
+// Integration with page title
+.page-title-box {
+    .view-toggle-container {
+        margin-left: auto;
+        margin-right: 1rem;
+    }
+}
+
+// Compact version for small spaces
+.view-toggle-compact {
+    .view-toggle-label {
+        min-width: 140px;
+        height: 36px;
+        
+        .view-toggle-option {
+            padding: 4px 8px;
+            font-size: 0.75rem;
+            
+            i {
+                font-size: 0.9rem;
+            }
+        }
+    }
+} 

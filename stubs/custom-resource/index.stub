@@ -1,0 +1,22 @@
+@extends('layouts.vertical', ['title' => '{{ userPluralName }} List'])
+
+
+@section('card-tools-add-btn')
+    <div>
+        <a href="{{ route('{{ routeName }}.create') }}" class="btn btn-sm btn-primary">
+            <i class="bx bx-plus me-1"></i>Create {{ Name }}
+        </a>
+    </div>
+@endsection
+
+@section('filters')
+    <div class="row">
+        <div class="col-md-3">
+            // custom filter
+        </div>
+    </div>
+@endsection
+
+@section('content')
+    <x-datatable id="{{ routeName }}-table" :per-page="7" title="All {{ userPluralName }} List" />
+@endsection

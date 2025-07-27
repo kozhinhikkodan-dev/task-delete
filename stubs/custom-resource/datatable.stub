@@ -1,0 +1,51 @@
+<?php
+
+namespace App\DataTables;
+
+use App\DataTables\Support\DataTableColumn as Column;
+use App\Models\{{ model }};
+use Yajra\DataTables\DataTableAbstract;
+use Yajra\DataTables\Services\DataTable;
+use App\Http\Traits\DataTable as DataTableTrait;
+
+class {{ model }}sDataTable extends DataTable
+{
+    use DataTableTrait;
+
+    public function dataTable($query): DataTableAbstract
+    {
+        $this->normalizePagination();
+
+        return datatables()
+            ->eloquent($query)
+            ->addColumn('action', function (${{ modelVariable }}) {
+                return renderActions(${{ modelVariable }});
+            })
+            ->editColumn('created_at', function (${{ modelVariable }}) {
+                return ${{ modelVariable }}->created_at->format('M d, Y') . ' ' . ${{ modelVariable }}->created_at->format('h:i A');
+            })
+            ->rawColumns(['action', 'created_at']);
+    }
+
+    public function query({{ model }} $model)
+    {
+        $query = $model->newQuery()->select('*');
+        $filters = request()->input('filter', []);
+
+        if ($searchTerm = request()->input('search', null)) {
+            $query->where('name', 'like', '%' . $searchTerm . '%');
+        }
+
+        return $query;
+    }
+
+    public function columns(): array
+    {
+        return [
+            Column::make('id')->title('ID')->sortable()->center(),
+            Column::make('column')->title('Column Name')->bold(),
+            Column::make('created_at')->title('Created At')->render(),
+            Column::make('action')->title('Action')->width('100px'),
+        ];
+    }
+}
