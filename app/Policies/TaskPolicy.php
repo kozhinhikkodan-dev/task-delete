@@ -16,6 +16,7 @@ class TaskPolicy
     public const PERMISSION_DELETE = 'Delete task';
     public const PERMISSION_RESTORE = 'Restore task';
     public const PERMISSION_FORCE_DELETE = 'Force delete task';
+    public const PERMISSION_SHOW_ASSIGNED_TASKS_ONLY = 'Show assigned tasks only';
 
     /**
      * Determine whether the user can view any models.
@@ -89,5 +90,10 @@ class TaskPolicy
     public function forceDelete(User $user, Task $task): bool
     {
         return $user->can(self::PERMISSION_FORCE_DELETE);
+    }
+
+     public function showAssignedTasksOnly(User $user, Task $task): bool
+    {
+        return $user->can(self::PERMISSION_SHOW_ASSIGNED_TASKS_ONLY);
     }
 } 

@@ -108,8 +108,10 @@ class TaskCalendar {
 
         // Handle quick edit button in task details modal
         if(isStaff) {
-            document.getElementById('modal-quick-edit-btn').style.display = 'none';
-            document.getElementById('modal-edit-link').style.display = 'none';
+            const modalQuickEditBtn = document.getElementById('modal-quick-edit-btn');
+            if(modalQuickEditBtn) { modalQuickEditBtn.style.display = 'none'};
+            const modalEditLink = document.getElementById('modal-edit-link');
+            if(modalEditLink) { modalEditLink.style.display = 'none' };
         }
 
         const quickEditBtn = document.getElementById('modal-quick-edit-btn');
@@ -433,9 +435,10 @@ class TaskCalendar {
         document.getElementById('modal-estimated-duration').textContent = props.estimated_duration;
         document.getElementById('modal-notes').textContent = props.note_content || 'No notes available';
         
-        // Set edit link with calendar redirect
-        document.getElementById('modal-edit-link').href = `/tasks/${props.task_id}/edit?redirect_to=calendar`;
-        
+        if(!isStaff) {
+            // Set edit link with calendar redirect
+            document.getElementById('modal-edit-link').href = `/tasks/${props.task_id}/edit?redirect_to=calendar`;
+        }
         // Set up status update form if it exists
         const statusSelect = document.getElementById('modal-status-select');
         if (statusSelect) {

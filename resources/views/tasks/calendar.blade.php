@@ -33,7 +33,7 @@
                         <div class="calendar-filters">
                             <h5 class="card-title">Filters</h5>
                             <form id="calendar-filters">
-                                <div class="mb-3">
+                                <div class="mb-1">
                                     <label class="form-label">Customer</label>
                                     <select class="form-select" id="filter-customer" name="customer_id">
                                         <option value="">All Customers</option>
@@ -43,7 +43,7 @@
                                     </select>
                                 </div>
                                 
-                                <div class="mb-3">
+                                <div class="mb-1">
                                     <label class="form-label">Task Type</label>
                                     <select class="form-select" id="filter-task-type" name="task_type_id">
                                         <option value="">All Task Types</option>
@@ -52,18 +52,20 @@
                                         @endforeach
                                     </select>
                                 </div>
+
+                                @cannot(\App\Policies\TaskPolicy::PERMISSION_SHOW_ASSIGNED_TASKS_ONLY, \App\Models\Task::class)
+                                    <div class="mb-1">
+                                        <label class="form-label">Assigned To</label>
+                                        <select class="form-select" id="filter-assigned-to" name="assigned_to">
+                                            <option value="">All Users</option>
+                                            @foreach($users as $user)
+                                                <option value="{{ $user->id }}">{{ $user->name }}</option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+                                @endcannot
                                 
-                                <div class="mb-3">
-                                    <label class="form-label">Assigned To</label>
-                                    <select class="form-select" id="filter-assigned-to" name="assigned_to">
-                                        <option value="">All Users</option>
-                                        @foreach($users as $user)
-                                            <option value="{{ $user->id }}">{{ $user->name }}</option>
-                                        @endforeach
-                                    </select>
-                                </div>
-                                
-                                <div class="mb-3">
+                                <div class="mb-2">
                                     <label class="form-label">Status</label>
                                     <select class="form-select" id="filter-status" name="status">
                                         <option value="">All Statuses</option>

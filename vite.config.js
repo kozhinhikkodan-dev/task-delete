@@ -69,7 +69,8 @@ export default defineConfig({
                 'resources/js/components/apexchart-polar-area.js',
                 'resources/js/components/extended-rating.js',
                 'resources/js/components/extended-sweetalert.js',
-            'resources/js/pages/toasts.js'
+                'resources/js/pages/toasts.js',
+                'resources/js/pages/task-calendar.js',
             ],
             refresh: true,
         }),

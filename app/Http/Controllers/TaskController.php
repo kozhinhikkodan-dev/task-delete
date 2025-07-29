@@ -323,6 +323,10 @@ class TaskController extends Controller
             $query->where('status', $request->status);
         }
 
+        if(auth()->user()->can(\App\Policies\TaskPolicy::PERMISSION_SHOW_ASSIGNED_TASKS_ONLY, Task::class)) {
+            $query->where('assigned_to', auth()->id());
+        }
+
         $tasks = $query->get();
 
         $events = $tasks->map(function ($task) {

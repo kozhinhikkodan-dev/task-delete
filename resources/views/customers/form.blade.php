@@ -345,7 +345,6 @@
 @endsection
 
 @section('js')
-    @vite(['node_modules/choices.js/public/assets/scripts/choices.min.js'])
     <script>
         // Initialize choices
         const choicesInstance = new Choices('#choices-single-default', {

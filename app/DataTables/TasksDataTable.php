@@ -94,6 +94,10 @@ class TasksDataTable extends DataTable
             $query->where('assigned_to', $assignedTo);
         }
 
+        if(auth()->user()->can(\App\Policies\TaskPolicy::PERMISSION_SHOW_ASSIGNED_TASKS_ONLY, Task::class)) {
+            $query->where('assigned_to', auth()->id());
+        }
+
         if ($dateFrom = $filters['date_from'] ?? null) {
             $query->where('task_date', '>=', $dateFrom);
         }
