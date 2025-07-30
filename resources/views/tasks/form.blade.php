@@ -134,6 +134,22 @@
                                     @enderror
                                 </div>
                             </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="status" class="form-label">Publish Status</label>
+                                    <select name="publish_status" id="publish_status" class="form-select @error('publish_status') is-invalid @enderror">
+                                            <option value="">Select Publish Status</option>
+                                            @foreach(['1' => 'Published', '0' => 'Unpublished'] as $value => $label)
+                                                <option value="{{ $value }}" {{ (old('publish_status', $task->publish_status ?? '') == $value) ? 'selected' : '' }}>
+                                                    {{ $label }}
+                                                </option>
+                                            @endforeach
+                                    </select>
+                                    @error('publish_status')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                </div>
+                            </div>
                         </div>
 
                         {{-- Hidden fields - these will be set automatically or handled in the backend --}}

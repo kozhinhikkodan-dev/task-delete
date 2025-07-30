@@ -431,8 +431,8 @@ class TaskCalendar {
         document.getElementById('modal-task-type').textContent = props.task_type;
         document.getElementById('modal-assigned-to').textContent = props.assigned_to_name;
         document.getElementById('modal-status').innerHTML = `<span class="badge bg-${this.getStatusColor(props.status)}">${props.status_label}</span>`;
-        document.getElementById('modal-estimated-cost').textContent = props.estimated_cost;
-        document.getElementById('modal-estimated-duration').textContent = props.estimated_duration;
+        // document.getElementById('modal-estimated-cost').textContent = props.estimated_cost;
+        // document.getElementById('modal-estimated-duration').textContent = props.estimated_duration;
         document.getElementById('modal-notes').textContent = props.note_content || 'No notes available';
         
         if(!isStaff) {
@@ -494,7 +494,9 @@ class TaskCalendar {
             'filter-customer': 'customer_id',
             'filter-task-type': 'task_type_id',
             'filter-assigned-to': 'assigned_to',
-            'filter-status': 'status'
+            'filter-status': 'status',
+            'filter-content-status' : 'content_status',
+            'filter-publish-status' : 'publish_status'
         };
         
         Object.keys(filterElements).forEach(elementId => {

@@ -32,7 +32,7 @@
                         <!-- Filters -->
                         <div class="calendar-filters">
                             <h5 class="card-title">Filters</h5>
-                            <form id="calendar-filters">
+                            <form id="calendar-filters" class="mt-2">
                                 <div class="mb-1">
                                     <label class="form-label">Customer</label>
                                     <select class="form-select" id="filter-customer" name="customer_id">
@@ -65,13 +65,31 @@
                                     </div>
                                 @endcannot
                                 
-                                <div class="mb-2">
+                                <div class="mb-1">
                                     <label class="form-label">Status</label>
                                     <select class="form-select" id="filter-status" name="status">
                                         <option value="">All Statuses</option>
                                         @foreach($statusOptions as $key => $label)
                                             <option value="{{ $key }}">{{ $label }}</option>
                                         @endforeach
+                                    </select>
+                                </div>
+
+                                <div class="mb-1">
+                                    <label class="form-label">Content Status</label>
+                                    <select class="form-select" id="filter-content-status" name="content_status">
+                                        <option value="">All Tasks</option>
+                                        <option value="0">No Content</option>
+                                        <option value="1">With Content</option>
+                                    </select>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="form-label">Publish Status</label>
+                                    <select class="form-select" id="filter-publish-status" name="publish_status">
+                                        <option value="">All Tasks</option>
+                                        <option value="0">Un Published</option>
+                                        <option value="1">Published</option>
                                     </select>
                                 </div>
                                 
@@ -85,7 +103,7 @@
                         <!-- Legend -->
                         <div class="mt-4 status-legend">
                             <h6 class="card-title">Status Legend</h6>
-                            <div class="mb-2">
+                            <div class="my-2">
                                 <span class="status-indicator status-pending me-2"></span> Pending
                             </div>
                             <div class="mb-2">
@@ -138,14 +156,14 @@
                                     <label class="form-label fw-bold">Status:</label>
                                     <p id="modal-status" class="mb-0"></p>
                                 </div>
-                                <div class="mb-3">
+                                {{-- <div class="mb-3">
                                     <label class="form-label fw-bold">Estimated Cost:</label>
                                     <p id="modal-estimated-cost" class="mb-0"></p>
                                 </div>
                                 <div class="mb-3">
                                     <label class="form-label fw-bold">Estimated Duration:</label>
                                     <p id="modal-estimated-duration" class="mb-0"></p>
-                                </div>
+                                </div> --}}
                             </div>
                         </div>
                         <div class="mb-3">
@@ -332,6 +350,7 @@
         width: 12px;
         height: 12px;
         border-radius: 50%;
+        /* border: unset; */
     }
     
     .status-legend .status-pending {

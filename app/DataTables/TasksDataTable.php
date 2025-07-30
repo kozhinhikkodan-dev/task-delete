@@ -118,8 +118,8 @@ class TasksDataTable extends DataTable
             Column::make('assigned_to_name')->title('Assigned To'),
             Column::make('task_date')->title('Task Date'),
             Column::make('status')->title('Status')->center(),
-            Column::make('estimated_cost')->title('Est. Cost')->center(),
-            Column::make('estimated_duration_minutes')->title('Est. Duration')->center(),
+            // Column::make('estimated_cost')->title('Est. Cost')->center(),
+            // Column::make('estimated_duration_minutes')->title('Est. Duration')->center(),
             Column::make('created_at')->title('Created'),
             Column::make('action')->title('Actions')->width('150px'),
         ];

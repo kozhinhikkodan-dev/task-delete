@@ -27,6 +27,7 @@ class TaskRequest extends FormRequest
             'task_date' => 'required|date',
             'note_content' => 'nullable|string',
             'status' => 'required|in:pending,in_progress,completed,cancelled',
+            'publish_status' => 'nullable|boolean',
             'estimated_cost' => 'nullable|numeric|min:0',
             'estimated_duration_minutes' => 'nullable|integer|min:1',
             'started_at' => 'nullable|date',

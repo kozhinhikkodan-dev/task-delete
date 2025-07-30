@@ -16,7 +16,7 @@
 
     <!-- Key Metrics Row -->
     <div class="row g-4 mb-4">
-        <div class="col-xl-3 col-lg-6 col-md-6">
+        <div class="col-xl-4 col-lg-6 col-md-6">
             <div class="card border-0 shadow-sm h-100">
                 <div class="card-body p-4">
                     <div class="d-flex align-items-center">
@@ -39,7 +39,7 @@
             </div>
         </div>
 
-        <div class="col-xl-3 col-lg-6 col-md-6">
+        <div class="col-xl-4 col-lg-6 col-md-6">
             <div class="card border-0 shadow-sm h-100">
                 <div class="card-body p-4">
                     <div class="d-flex align-items-center">
@@ -62,7 +62,7 @@
             </div>
         </div>
 
-        <div class="col-xl-3 col-lg-6 col-md-6">
+        <div class="col-xl-4 col-lg-6 col-md-6">
             <div class="card border-0 shadow-sm h-100">
                 <div class="card-body p-4">
                     <div class="d-flex align-items-center">
@@ -84,7 +84,7 @@
                 </div>
             </div>
         </div>
-
+{{-- 
         <div class="col-xl-3 col-lg-6 col-md-6">
             <div class="card border-0 shadow-sm h-100">
                 <div class="card-body p-4">
@@ -106,7 +106,7 @@
                     </div>
                 </div>
             </div>
-        </div>
+        </div> --}}
     </div>
 
     <!-- Analytics Row -->
@@ -304,7 +304,7 @@
                                     <th class="border-0">Customer</th>
                                     <th class="border-0">Assigned To</th>
                                     <th class="border-0">Status</th>
-                                    <th class="border-0">Cost</th>
+                                    {{-- <th class="border-0">Cost</th> --}}
                                     <th class="border-0">Date</th>
                                 </tr>
                             </thead>
@@ -335,7 +335,7 @@
                                             {{ $task->status_label }}
                                         </span>
                                     </td>
-                                    <td class="py-3 fw-medium">${{ number_format($task->estimated_cost, 2) }}</td>
+                                    {{-- <td class="py-3 fw-medium">${{ number_format($task->estimated_cost, 2) }}</td> --}}
                                     <td class="py-3 text-muted">{{ $task->task_date->format('M d, Y') }}</td>
                                 </tr>
                                 @empty
@@ -421,11 +421,11 @@
                             <thead class="table-light">
                                 <tr>
                                     <th class="border-0">Task Type</th>
-                                    <th class="border-0">Base Rate</th>
-                                    <th class="border-0">Est. Time</th>
+                                    {{-- <th class="border-0">Base Rate</th>
+                                    <th class="border-0">Est. Time</th> --}}
                                     <th class="border-0">Priority</th>
                                     <th class="border-0">Completed</th>
-                                    <th class="border-0">Revenue</th>
+                                    {{-- <th class="border-0">Revenue</th> --}}
                                     <th class="border-0">Status</th>
                                 </tr>
                             </thead>
@@ -440,10 +440,10 @@
                                             @endif
                                         </div>
                                     </td>
-                                    <td class="py-3 fw-medium text-success">${{ number_format($taskType->base_rate, 2) }}</td>
+                                    {{-- <td class="py-3 fw-medium text-success">${{ number_format($taskType->base_rate, 2) }}</td>
                                     <td class="py-3">
                                         <span class="badge bg-info-subtle text-info">{{ $taskType->formatted_estimated_time }}</span>
-                                    </td>
+                                    </td> --}}
                                     <td class="py-3">
                                         <span class="badge bg-{{ $taskType->priority == 'high' ? 'danger' : ($taskType->priority == 'medium' ? 'warning' : 'info') }}-subtle text-{{ $taskType->priority == 'high' ? 'danger' : ($taskType->priority == 'medium' ? 'warning' : 'info') }}">
                                             {{ $taskType->priority_label }}
@@ -457,7 +457,7 @@
                                             </div>
                                         </div>
                                     </td>
-                                    <td class="py-3 fw-medium text-primary">${{ number_format($taskType->tasks->sum('estimated_cost'), 2) }}</td>
+                                    {{-- <td class="py-3 fw-medium text-primary">${{ number_format($taskType->tasks->sum('estimated_cost'), 2) }}</td> --}}
                                     <td class="py-3">
                                         <span class="badge bg-{{ $taskType->status == 'active' ? 'success' : 'secondary' }}-subtle text-{{ $taskType->status == 'active' ? 'success' : 'secondary' }}">
                                             {{ $taskType->status_label }}

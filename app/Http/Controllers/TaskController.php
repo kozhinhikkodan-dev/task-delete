@@ -318,6 +318,17 @@ class TaskController extends Controller
             $query->where('assigned_to', $request->assigned_to);
         }
 
+        // Filter by content status
+        if ($request->has('content_status')) {
+            $method = !$request->content_status ? 'whereNull' : 'whereNotNull';
+            $query->$method('note_content');
+        }
+
+        // Filter by publish status
+        if ($request->has('publish_status')) {
+            $query->where('publish_status', $request->publish_status);
+        }
+
         // Filter by status if provided
         if ($request->has('status') && $request->status) {
             $query->where('status', $request->status);

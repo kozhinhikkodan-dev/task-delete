@@ -21,6 +21,7 @@ class Task extends Model
         'task_date',
         'note_content',
         'status',
+        'publish_status',
         'estimated_cost',
         'estimated_duration_minutes',
         'started_at',
