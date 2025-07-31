@@ -53,19 +53,19 @@ class TaskController extends Controller
     public function store(TaskRequest $request)
     {
         $taskData = $request->getData();
-        
+
         // Use automatic assignment if no assignee is specified
         if (!$request->filled('assigned_to')) {
             $assignmentService = new TaskAssignmentService();
             $assignmentResult = $assignmentService->assignTask($taskData);
-            
+
             if (!$assignmentResult['success']) {
                 return redirect()->back()
                     ->withInput()
                     ->with('assignment_error', $assignmentResult['message'])
                     ->with('suggested_dates', $assignmentResult['suggested_dates']);
             }
-            
+
             $taskData['assigned_to'] = $assignmentResult['assigned_to'];
             $successMessage = 'Task created successfully. ' . $assignmentResult['message'];
         } else {
@@ -74,7 +74,7 @@ class TaskController extends Controller
 
         DB::transaction(function () use ($taskData) {
             $task = Task::create($taskData);
-            
+
             // Auto-calculate estimated cost and duration based on task type
             if ($task->taskType) {
                 $task->update([
@@ -86,7 +86,7 @@ class TaskController extends Controller
 
         // Determine redirect route based on where user came from
         $redirectRoute = $this->determineRedirectRoute($request);
-        
+
         return redirect()->route($redirectRoute)->with('success', $successMessage);
     }
 
@@ -122,7 +122,7 @@ class TaskController extends Controller
 
         // Determine redirect route based on where user came from
         $redirectRoute = $this->determineRedirectRoute($request);
-        
+
         return redirect()->route($redirectRoute)->with('success', 'Task updated successfully.');
     }
 
@@ -144,12 +144,12 @@ class TaskController extends Controller
 
         try {
             $taskData = $request->getData();
-            
+
             // Use automatic assignment if no assignee is specified
             if (!$request->filled('assigned_to')) {
                 $assignmentService = new TaskAssignmentService();
                 $assignmentResult = $assignmentService->assignTask($taskData);
-                
+
                 if (!$assignmentResult['success']) {
                     return response()->json([
                         'success' => false,
@@ -157,7 +157,7 @@ class TaskController extends Controller
                         'suggested_dates' => $assignmentResult['suggested_dates']
                     ], 422);
                 }
-                
+
                 $taskData['assigned_to'] = $assignmentResult['assigned_to'];
                 $successMessage = 'Task created successfully. ' . $assignmentResult['message'];
             } else {
@@ -244,22 +244,22 @@ class TaskController extends Controller
     public function updateStatus(Request $request, Task $task)
     {
         $this->authorize('updateStatus', $task);
-        
+
         $request->validate([
             'status' => 'required|in:pending,in_progress,completed,cancelled',
         ]);
 
         DB::transaction(function () use ($request, $task) {
             $data = ['status' => $request->status];
-            
+
             if ($request->status === 'in_progress' && !$task->started_at) {
                 $data['started_at'] = now();
             }
-            
+
             if ($request->status === 'completed' && !$task->completed_at) {
                 $data['completed_at'] = now();
             }
-            
+
             $task->update($data);
         });
 
@@ -326,7 +326,17 @@ class TaskController extends Controller
 
         // Filter by publish status
         if ($request->has('publish_status')) {
-            $query->where('publish_status', $request->publish_status);
+            $taskTypeIds = TaskType::select('id')->whereIn('name', TaskType::PUBLISHABLE_TASK_TYPES)->pluck('id');
+            $query->whereIn('task_type_id', $taskTypeIds);
+
+            if ($request->publish_status === 0 || $request->publish_status === '0') {
+                $query->where(function ($q) {
+                    $q->where('publish_status', 0)
+                        ->orWhereNull('publish_status');
+                });
+            } else {
+                $query->where('publish_status', $request->publish_status);
+            }
         }
 
         // Filter by status if provided
@@ -334,7 +344,7 @@ class TaskController extends Controller
             $query->where('status', $request->status);
         }
 
-        if(auth()->user()->can(\App\Policies\TaskPolicy::PERMISSION_SHOW_ASSIGNED_TASKS_ONLY, Task::class)) {
+        if (auth()->user()->can(\App\Policies\TaskPolicy::PERMISSION_SHOW_ASSIGNED_TASKS_ONLY, Task::class)) {
             $query->where('assigned_to', auth()->id());
         }
 
@@ -391,6 +401,7 @@ class TaskController extends Controller
                     'estimated_cost' => $task->formatted_estimated_cost,
                     'estimated_duration' => $task->formatted_estimated_duration,
                     'note_content' => $task->note_content,
+                    'publish_status' => $task->publish_status
                 ]
             ];
         });
@@ -467,7 +478,7 @@ class TaskController extends Controller
         if ($request->has('date') || $request->has('task_date')) {
             $taskDate = $request->get('date') ?? $request->get('task_date');
             $refererContainsCalendar = $referer && str_contains($referer, 'tasks-calendar');
-            
+
             if ($refererContainsCalendar || $request->has('date')) {
                 return 'tasks.calendar';
             }
@@ -476,4 +487,4 @@ class TaskController extends Controller
         // Default to table view
         return 'tasks.index';
     }
-} 
+}

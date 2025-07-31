@@ -115,7 +115,8 @@ class CustomerTaskCreationService
                 'task_type_id' => $taskType->id,
                 'assigned_to' => $assignedUserId,
                 'task_date' => $taskDate,
-                'note_content' => $this->generateTaskNote($countField, $taskCounter, $count),
+                // 'note_content' => $this->generateTaskNote($countField, $taskCounter, $count),
+                'note_content' => null,
                 'status' => 'pending',
                 'estimated_cost' => $taskType->base_rate,
                 'estimated_duration_minutes' => $taskType->estimated_time_minutes,
@@ -139,7 +140,7 @@ class CustomerTaskCreationService
     private function calculateTaskDates(Customer $customer, float $count): array
     {
         $serviceStartDate = $customer->service_start_date ? Carbon::parse($customer->service_start_date) : Carbon::now();
-        $serviceRenewDate = $customer->service_renew_date ? Carbon::parse($customer->service_renew_date) : $serviceStartDate->copy()->addMonths(12);
+        $serviceRenewDate = $customer->service_renew_date ? Carbon::parse($customer->service_renew_date)->subDay() : $serviceStartDate->copy()->addMonths(12);
 
         // If service renewal date is before or equal to start date, default to 12 months
         if ($serviceRenewDate->lte($serviceStartDate)) {

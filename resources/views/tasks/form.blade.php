@@ -6,50 +6,56 @@
             <div class="card">
                 <form method="POST" action="{{ isset($task) ? route('tasks.update', $task->id) : route('tasks.store') }}">
                     @csrf
-                    @if(isset($task))
+                    @if (isset($task))
                         @method('PUT')
                     @endif
 
                     {{-- Hidden field to track where user came from --}}
-                    @if(request()->has('date') || str_contains(request()->header('referer', ''), 'tasks-calendar'))
+                    @if (request()->has('date') || str_contains(request()->header('referer', ''), 'tasks-calendar'))
                         <input type="hidden" name="redirect_to" value="calendar">
                     @endif
 
                     <div class="card-body">
                         {{-- Assignment Error Alert --}}
-                        @if(session('assignment_error'))
+                        @if (session('assignment_error'))
                             <div class="alert alert-warning alert-dismissible fade show" role="alert">
                                 <i class="bx bx-info-circle me-2"></i>
                                 <strong>Assignment Issue:</strong> {{ session('assignment_error') }}
-                                
-                                @if(session('suggested_dates'))
+
+                                @if (session('suggested_dates'))
                                     <hr class="my-2">
                                     <p class="mb-2"><strong>Suggested available dates:</strong></p>
                                     <div class="row">
-                                        @foreach(session('suggested_dates') as $suggestedDate)
+                                        @foreach (session('suggested_dates') as $suggestedDate)
                                             <div class="col-md-6 col-lg-4 mb-2">
-                                                <button type="button" class="btn btn-outline-primary btn-sm w-100 suggested-date-btn" 
-                                                        data-date="{{ $suggestedDate['date'] }}">
-                                                    {{ $suggestedDate['formatted_date'] }} ({{ $suggestedDate['day_of_week'] }})
-                                                    <br><small>{{ $suggestedDate['available_staff_count'] }} staff available</small>
+                                                <button type="button"
+                                                    class="btn btn-outline-primary btn-sm w-100 suggested-date-btn"
+                                                    data-date="{{ $suggestedDate['date'] }}">
+                                                    {{ $suggestedDate['formatted_date'] }}
+                                                    ({{ $suggestedDate['day_of_week'] }})
+                                                    <br><small>{{ $suggestedDate['available_staff_count'] }} staff
+                                                        available</small>
                                                 </button>
                                             </div>
                                         @endforeach
                                     </div>
                                 @endif
-                                
+
                                 <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                             </div>
                         @endif
-                        
+
                         <div class="row">
                             <div class="col-md-6">
                                 <div class="mb-3">
-                                    <label for="customer_id" class="form-label">Select Client <span class="text-danger">*</span></label>
-                                    <select name="customer_id" id="customer_id" class="form-select @error('customer_id') is-invalid @enderror" required>
+                                    <label for="customer_id" class="form-label">Select Client <span
+                                            class="text-danger">*</span></label>
+                                    <select name="customer_id" id="customer_id"
+                                        class="form-select @error('customer_id') is-invalid @enderror" required>
                                         <option value="">Select Customer</option>
-                                        @foreach($customers as $customer)
-                                            <option value="{{ $customer->id }}" {{ (old('customer_id', $task->customer_id ?? '') == $customer->id) ? 'selected' : '' }}>
+                                        @foreach ($customers as $customer)
+                                            <option value="{{ $customer->id }}"
+                                                {{ old('customer_id', $task->customer_id ?? '') == $customer->id ? 'selected' : '' }}>
                                                 {{ $customer->name }}
                                             </option>
                                         @endforeach
@@ -62,9 +68,12 @@
 
                             <div class="col-md-6">
                                 <div class="mb-3">
-                                    <label for="task_date" class="form-label">Task Date <span class="text-danger">*</span></label>
-                                    <input type="date" name="task_date" id="task_date" class="form-control @error('task_date') is-invalid @enderror" 
-                                           value="{{ old('task_date', isset($task) ? $task->task_date->format('Y-m-d') : ($taskDate ?? '')) }}" required>
+                                    <label for="task_date" class="form-label">Task Date <span
+                                            class="text-danger">*</span></label>
+                                    <input type="date" name="task_date" id="task_date"
+                                        class="form-control @error('task_date') is-invalid @enderror"
+                                        value="{{ old('task_date', isset($task) ? $task->task_date->format('Y-m-d') : $taskDate ?? '') }}"
+                                        required>
                                     @error('task_date')
                                         <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror
@@ -75,11 +84,14 @@
                         <div class="row">
                             <div class="col-md-6">
                                 <div class="mb-3">
-                                    <label for="task_type_id" class="form-label">Select Task Type <span class="text-danger">*</span></label>
-                                    <select name="task_type_id" id="task_type_id" class="form-select @error('task_type_id') is-invalid @enderror" required>
+                                    <label for="task_type_id" class="form-label">Select Task Type <span
+                                            class="text-danger">*</span></label>
+                                    <select name="task_type_id" id="task_type_id"
+                                        class="form-select @error('task_type_id') is-invalid @enderror" required>
                                         <option value="">Select Task Type</option>
-                                        @foreach($taskTypes as $taskType)
-                                            <option value="{{ $taskType->id }}" {{ (old('task_type_id', $task->task_type_id ?? '') == $taskType->id) ? 'selected' : '' }}>
+                                        @foreach ($taskTypes as $taskType)
+                                            <option value="{{ $taskType->id }}"
+                                                {{ old('task_type_id', $task->task_type_id ?? '') == $taskType->id ? 'selected' : '' }}>
                                                 {{ $taskType->name }}
                                             </option>
                                         @endforeach
@@ -93,16 +105,20 @@
                             <div class="col-md-6">
                                 <div class="mb-3">
                                     <label for="assigned_to" class="form-label">
-                                        Assigned To 
+                                        Assigned To
                                         <span class="text-muted">(Optional - Auto-assign to available staff)</span>
                                     </label>
-                                    <select name="assigned_to" id="assigned_to" class="form-select @error('assigned_to') is-invalid @enderror">
+                                    <select name="assigned_to" id="assigned_to"
+                                        class="form-select @error('assigned_to') is-invalid @enderror">
                                         <option value="">Auto-assign to available staff</option>
-                                        @foreach($users->where('status', 'active') as $user)
-                                            <option value="{{ $user->id }}" {{ (old('assigned_to', $task->assigned_to ?? '') == $user->id) ? 'selected' : '' }}>
+                                        @foreach ($users->where('status', 'active') as $user)
+                                            <option value="{{ $user->id }}"
+                                                {{ old('assigned_to', $task->assigned_to ?? '') == $user->id ? 'selected' : '' }}>
                                                 {{ $user->name }}
-                                                @if($user->hasRole('Staff'))
-                                                    (Staff - {{ $user->min_task_per_day ?? 0 }}-{{ $user->max_task_per_day ?? 0 }} tasks/day)
+                                                @if ($user->hasRole('Staff'))
+                                                    (Staff -
+                                                    {{ $user->min_task_per_day ?? 0 }}-{{ $user->max_task_per_day ?? 0 }}
+                                                    tasks/day)
                                                 @endif
                                             </option>
                                         @endforeach
@@ -121,10 +137,13 @@
                         <div class="row">
                             <div class="col-md-6">
                                 <div class="mb-3">
-                                    <label for="status" class="form-label">Status <span class="text-danger">*</span></label>
-                                    <select name="status" id="status" class="form-select @error('status') is-invalid @enderror" required>
-                                        @foreach(\App\Models\Task::getStatusOptions() as $value => $label)
-                                            <option value="{{ $value }}" {{ (old('status', $task->status ?? 'pending') == $value) ? 'selected' : '' }}>
+                                    <label for="status" class="form-label">Status <span
+                                            class="text-danger">*</span></label>
+                                    <select name="status" id="status"
+                                        class="form-select @error('status') is-invalid @enderror" required>
+                                        @foreach (\App\Models\Task::getStatusOptions() as $value => $label)
+                                            <option value="{{ $value }}"
+                                                {{ old('status', $task->status ?? 'pending') == $value ? 'selected' : '' }}>
                                                 {{ $label }}
                                             </option>
                                         @endforeach
@@ -134,16 +153,19 @@
                                     @enderror
                                 </div>
                             </div>
-                            <div class="col-md-6">
+                            <div class="col-md-6" id="create-form-publish-status"
+                                style="@if (!in_array($task?->taskType?->name ?? null, App\Models\TaskType::PUBLISHABLE_TASK_TYPES)) display:none @endif">
                                 <div class="mb-3">
                                     <label for="status" class="form-label">Publish Status</label>
-                                    <select name="publish_status" id="publish_status" class="form-select @error('publish_status') is-invalid @enderror">
-                                            <option value="">Select Publish Status</option>
-                                            @foreach(['1' => 'Published', '0' => 'Unpublished'] as $value => $label)
-                                                <option value="{{ $value }}" {{ (old('publish_status', $task->publish_status ?? '') == $value) ? 'selected' : '' }}>
-                                                    {{ $label }}
-                                                </option>
-                                            @endforeach
+                                    <select name="publish_status" id="publish_status"
+                                        class="form-select @error('publish_status') is-invalid @enderror">
+                                        <option value="">Select Publish Status</option>
+                                        @foreach (['1' => 'Published', '0' => 'Unpublished'] as $value => $label)
+                                            <option value="{{ $value }}"
+                                                {{ old('publish_status', $task->publish_status ?? '') == $value ? 'selected' : '' }}>
+                                                {{ $label }}
+                                            </option>
+                                        @endforeach
                                     </select>
                                     @error('publish_status')
                                         <div class="invalid-feedback">{{ $message }}</div>
@@ -153,19 +175,23 @@
                         </div>
 
                         {{-- Hidden fields - these will be set automatically or handled in the backend --}}
-                        <input type="hidden" name="estimated_cost" value="{{ old('estimated_cost', $task->estimated_cost ?? '') }}">
-                        <input type="hidden" name="estimated_duration_minutes" value="{{ old('estimated_duration_minutes', $task->estimated_duration_minutes ?? '') }}">
-                        @if(isset($task))
-                            <input type="hidden" name="started_at" value="{{ old('started_at', $task->started_at ? $task->started_at->format('Y-m-d\TH:i') : '') }}">
-                            <input type="hidden" name="completed_at" value="{{ old('completed_at', $task->completed_at ? $task->completed_at->format('Y-m-d\TH:i') : '') }}">
+                        <input type="hidden" name="estimated_cost"
+                            value="{{ old('estimated_cost', $task->estimated_cost ?? '') }}">
+                        <input type="hidden" name="estimated_duration_minutes"
+                            value="{{ old('estimated_duration_minutes', $task->estimated_duration_minutes ?? '') }}">
+                        @if (isset($task))
+                            <input type="hidden" name="started_at"
+                                value="{{ old('started_at', $task->started_at ? $task->started_at->format('Y-m-d\TH:i') : '') }}">
+                            <input type="hidden" name="completed_at"
+                                value="{{ old('completed_at', $task->completed_at ? $task->completed_at->format('Y-m-d\TH:i') : '') }}">
                         @endif
 
                         <div class="row">
                             <div class="col-12">
                                 <div class="mb-3">
                                     <label for="note_content" class="form-label">Note / Content</label>
-                                    <textarea name="note_content" id="note_content" class="form-control @error('note_content') is-invalid @enderror" 
-                                              rows="5" placeholder="Enter task details, requirements, or notes...">{{ old('note_content', $task->note_content ?? '') }}</textarea>
+                                    <textarea name="note_content" id="note_content" class="form-control @error('note_content') is-invalid @enderror"
+                                        rows="5" placeholder="Enter task details, requirements, or notes...">{{ old('note_content', $task->note_content ?? '') }}</textarea>
                                     @error('note_content')
                                         <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror
@@ -174,8 +200,9 @@
                         </div>
 
                         {{-- Hidden completion notes field --}}
-                        @if(isset($task))
-                            <input type="hidden" name="completion_notes" value="{{ old('completion_notes', $task->completion_notes ?? '') }}">
+                        @if (isset($task))
+                            <input type="hidden" name="completion_notes"
+                                value="{{ old('completion_notes', $task->completion_notes ?? '') }}">
                         @endif
 
                         <div class="row">
@@ -186,7 +213,10 @@
                                         // Determine cancel route based on where user came from
                                         if (request()->has('redirect_to') && request()->redirect_to === 'calendar') {
                                             $cancelRoute = 'tasks.calendar';
-                                        } elseif (request()->has('date') || str_contains(request()->header('referer', ''), 'tasks-calendar')) {
+                                        } elseif (
+                                            request()->has('date') ||
+                                            str_contains(request()->header('referer', ''), 'tasks-calendar')
+                                        ) {
                                             $cancelRoute = 'tasks.calendar';
                                         }
                                     @endphp
@@ -304,3 +334,23 @@
     });
 </script>
 @endpush
+
+
+@section('script')
+<script>
+    document.getElementById('task_type_id').addEventListener('change', function() {
+            console.log('Task type ID changed:', this.value);
+            const PUBLISHABLE_TASK_TYPES = [
+                'Graphic Design',
+                'Video Editing'
+            ];
+            const selectedValue = this.value;
+            const selectedText = this.options[this.selectedIndex].text;
+            if (PUBLISHABLE_TASK_TYPES.includes(selectedText)) {
+                $('#create-form-publish-status').slideDown();
+            } else {
+                $('#create-form-publish-status').slideUp();
+            }
+        });
+</script>
+@endsection

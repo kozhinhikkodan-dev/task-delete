@@ -9,6 +9,11 @@ class TaskType extends Model
 {
     use HasFactory;
 
+    const PUBLISHABLE_TASK_TYPES = [
+        'Graphic Design',
+        'Video Editing'	
+    ];
+
     /**
      * The attributes that are mass assignable.
      *
