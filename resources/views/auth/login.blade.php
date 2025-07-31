@@ -38,14 +38,14 @@
                                         <div class="mb-3">
                                             <label class="form-label" for="example-email">Email</label>
                                             <input type="email" id="example-email" name="email" class="form-control bg-"
-                                                placeholder="Enter your email" value="test@example.com">
+                                                placeholder="Enter your email" value="">
                                         </div>
                                         <div class="mb-3">
                                             {{-- <a href="{{ route('dashboard') }}"
                                                 class="float-end text-muted text-unline-dashed ms-1">Reset password</a> --}}
                                             <label class="form-label" for="example-password">Password</label>
                                             <input type="password" id="example-password" class="form-control"
-                                                placeholder="Enter your password" name="password" value="password">
+                                                placeholder="Enter your password" name="password" value="">
                                         </div>
                                         <div class="mb-3">
                                             <div class="form-check">
