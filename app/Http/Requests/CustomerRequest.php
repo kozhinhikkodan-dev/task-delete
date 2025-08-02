@@ -2,6 +2,8 @@
 
 namespace App\Http\Requests;
 
+use App\Models\Task;
+use App\Models\User;
 use Illuminate\Foundation\Http\FormRequest;
 
 class CustomerRequest extends FormRequest
@@ -37,13 +39,37 @@ class CustomerRequest extends FormRequest
             'total_video_edits' => 'nullable|numeric|min:0',
             'total_blog_posts' => 'nullable|numeric|min:0',
             'total_anchoring_video' => 'nullable|numeric|min:0',
-            'posters_assigned' => 'nullable|exists:users,id',
-            'video_edits_assigned' => 'nullable|exists:users,id',
-            'blog_posts_assigned' => 'nullable|exists:users,id',
-            'anchoring_video_assigned' => 'nullable|exists:users,id',
+            'posters_assigned' => [
+                'nullable',
+                'exists:users,id',
+                function ($attribute, $value, $fail) {
+                    $this->isStaffAvailable($value, $this->input('total_posters'), $this->input('service_start_date'), $this->input('service_renew_date'), $fail);
+                }
+            ],
+            'video_edits_assigned' => [
+                'nullable',
+                'exists:users,id',
+                function ($attribute, $value, $fail) {
+                    $this->isStaffAvailable($value, $this->input('total_video_edits'), $this->input('service_start_date'), $this->input('service_renew_date'), $fail);
+                }
+            ],
+            'blog_posts_assigned' => [
+                'nullable',
+                'exists:users,id',
+                function ($attribute, $value, $fail) {
+                    $this->isStaffAvailable($value, $this->input('total_blog_posts'), $this->input('service_start_date'), $this->input('service_renew_date'), $fail);
+                }
+            ],
+            'anchoring_video_assigned' => [
+                'nullable',
+                'exists:users,id',
+                function ($attribute, $value, $fail) {
+                    $this->isStaffAvailable($value, $this->input('total_anchoring_video'), $this->input('service_start_date'), $this->input('service_renew_date'), $fail);
+                }
+            ],
         ];
 
-        if($this->isMethod('PUT')){
+        if ($this->isMethod('PUT')) {
             $customer = $this->route('customer');
             $rules['email'] = 'required|email|unique:customers,email' . ($customer ? ',' . $customer->id : '');
         }
@@ -115,5 +141,49 @@ class CustomerRequest extends FormRequest
             'blog_posts_assigned' => $this->input('blog_posts_assigned'),
             'anchoring_video_assigned' => $this->input('anchoring_video_assigned'),
         ];
+    }
+    private function isStaffAvailable($staffId, $totalTaskcount, $start, $renew, $fail)
+    {
+        $user = User::find($staffId);
+
+        if (!$user || !$user->hasRole('Staff') || $user->status !== 'active') {
+            $fail('User is not a staff member or is not active.');
+        }
+        // Convert to Carbon instances if not already
+        $start = \Carbon\Carbon::parse($start);
+        $renew = \Carbon\Carbon::parse($renew);
+
+        // Ensure available_days is an array
+        $availableDays = $user->available_days ?? [];
+
+        if (!is_array($availableDays) || empty($availableDays)) {
+            $fail('Staff has no available days set.');
+            return;
+        }
+
+        // Count matching available days between the range
+        $daysCount = 0;
+        $current = $start->copy();
+
+        while ($current->lte($renew)) {
+            if (in_array($current->format('l'), $availableDays)) {
+                $daysCount++;
+            }
+            $current->addDay();
+        }
+
+        $currentAutoTasksCount = Task::where('assigned_to', $staffId)
+            ->whereDate('task_date', $current->format('Y-m-d'))
+            ->whereNotIn('status', ['cancelled', 'completed'])
+            ->where('is_auto', true)
+            ->count();
+
+        $availableMaxTasksCount = $user->max_task_per_day*$daysCount;
+        $availableTasksCount = $availableMaxTasksCount - $currentAutoTasksCount;
+        
+        if ($totalTaskcount > $availableTasksCount) {
+            $fail('Staff is not available for the selected date range, only ' . $availableTasksCount . ' tasks can be assigned.');
+        }
+
     }
 }

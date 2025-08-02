@@ -49,18 +49,16 @@ class CustomerController extends Controller
         DB::transaction(function () use ($request, &$customer, &$taskResult) {
             // Create the customer
             $customer = Customer::create($request->getData());
-
             // Create tasks if any counts are specified
             $assignmentData = $request->getAssignmentData();
-            $hasTaskCounts = $customer->total_posters > 0 || 
-                           $customer->total_video_edits > 0 || 
-                           $customer->total_blog_posts > 0 || 
-                           $customer->total_anchoring_video > 0;
+            $hasTaskCounts = ($customer->total_posters + 
+                              $customer->total_video_edits + 
+                              $customer->total_blog_posts + 
+                              $customer->total_anchoring_video) > 0;
 
-            if ($hasTaskCounts) {
+            if ($hasTaskCounts>0) {
                 $taskService = new CustomerTaskCreationService();
                 $taskResult = $taskService->createTasksForCustomer($customer, $assignmentData);
-                
                 if (!$taskResult['success']) {
                     throw new \Exception($taskResult['message']);
                 }

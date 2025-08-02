@@ -20,8 +20,8 @@ class DatabaseSeeder extends Seeder
             GrantAllPermissionsSeeder::class,
             TaskTypesSeeder::class,
             UserSeeder::class,
-            CustomerSeeder::class,
-            TasksSeeder::class,
+            // CustomerSeeder::class,
+            // TasksSeeder::class,
         ]);
     }
 }

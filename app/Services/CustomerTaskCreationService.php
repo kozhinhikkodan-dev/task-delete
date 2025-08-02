@@ -120,6 +120,7 @@ class CustomerTaskCreationService
                 'status' => 'pending',
                 'estimated_cost' => $taskType->base_rate,
                 'estimated_duration_minutes' => $taskType->estimated_time_minutes,
+                'is_auto' => 1
             ];
 
             $task = Task::create($taskData);

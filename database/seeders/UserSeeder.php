@@ -48,7 +48,7 @@ class UserSeeder extends Seeder
                 'username' => 'staff1',
                 'password' => bcrypt('password123'),
                 'min_task_per_day' => 2,
-                'max_task_per_day' => 5,
+                'max_task_per_day' => 2,
                 'available_days' => ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'],
                 'status' => 'active'
             ]
@@ -71,6 +71,38 @@ class UserSeeder extends Seeder
         );
         if (!$staffUser2->hasRole('Staff')) {
             $staffUser2->assignRole('Staff');
+        }
+
+        $staffUser3 = User::updateOrCreate(
+            ['email' => 'staff3@example.com'],
+            [
+                'name' => 'Staff Member 3',
+                'username' => 'staff3',
+                'password' => bcrypt('password123'),
+                'min_task_per_day' => 1,
+                'max_task_per_day' => 4,
+                'available_days' => ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'],
+                'status' => 'active'
+            ]
+        );
+        if (!$staffUser3->hasRole('Staff')) {
+            $staffUser3->assignRole('Staff');
+        }
+
+        $staffUser4 = User::updateOrCreate(
+            ['email' => 'staff4@example.com'],
+            [
+                'name' => 'Staff Member 4',
+                'username' => 'staff4',
+                'password' => bcrypt('password123'),
+                'min_task_per_day' => 1,
+                'max_task_per_day' => 4,
+                'available_days' => ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'],
+                'status' => 'active'
+            ]
+        );
+        if (!$staffUser4->hasRole('Staff')) {
+            $staffUser4->assignRole('Staff');
         }
 
         // Social Media Manager

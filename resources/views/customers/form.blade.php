@@ -268,6 +268,11 @@
                                             </option>
                                         @endforeach
                                     </select>
+                                    @error('posters_assigned')
+                                        <div class="invalid-feedback" style="display: block;">
+                                            {{ $message }}
+                                        </div>
+                                    @enderror
                                 </div>
                             </div>
 
@@ -288,6 +293,11 @@
                                             </option>
                                         @endforeach
                                     </select>
+                                    @error('video_edits_assigned')
+                                        <div class="invalid-feedback" style="display: block;">
+                                            {{ $message }}
+                                        </div>
+                                    @enderror
                                 </div>
                             </div>
 
@@ -308,6 +318,11 @@
                                                 </option>
                                             @endforeach
                                     </select>
+                                    @error('blog_posts_assigned')
+                                        <div class="invalid-feedback" style="display: block;">
+                                            {{ $message }}
+                                        </div>
+                                    @enderror
                                 </div>
                             </div>
 
@@ -328,6 +343,11 @@
                                             </option>
                                         @endforeach
                                     </select>
+                                    @error('anchoring_video_assigned')
+                                        <div class="invalid-feedback" style="display: block;">
+                                            {{ $message }}
+                                        </div>
+                                    @enderror
                                 </div>
                             </div>
                         </div>

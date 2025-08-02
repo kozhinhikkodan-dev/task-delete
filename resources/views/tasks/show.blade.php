@@ -28,7 +28,7 @@
                             <div class="col-md-6">
                                 <div class="mb-3">
                                     <label class="form-label fw-bold">Task ID:</label>
-                                    <p class="mb-0">#{{ $task->id }}</p>
+                                    <p class="mb-0">#{{ $task->id }} {{ $task->is_auto ? '(Auto generated)' : '' }}</p>
                                 </div>
                             </div>
                             <div class="col-md-6">

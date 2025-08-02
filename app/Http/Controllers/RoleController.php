@@ -85,15 +85,13 @@ class RoleController extends Controller
             // Assign permissions
             if ($request->filled('permissions')) {
                 $permissions = $request->permissions;
-                info($permissions);
                 // 1. Sync to role
                 $role->syncPermissions($permissions);
 
                 // 2. Sync to all users who have this role
                 foreach ($role->users as $user) {
-                    info($user->name);
                     // First, clear all direct permissions
-        $user->syncPermissions([]); // clears everything
+                    $user->syncPermissions([]); // clears everything
                     $user->syncPermissions($permissions); // will overwrite direct permissions
                 }
             }

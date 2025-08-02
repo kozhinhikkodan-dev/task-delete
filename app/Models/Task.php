@@ -29,6 +29,7 @@ class Task extends Model
         'started_at',
         'completed_at',
         'completion_notes',
+        'is_auto',
     ];
 
     /**

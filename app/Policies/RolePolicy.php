@@ -21,7 +21,6 @@ class RolePolicy
      */
     public function viewAny(User $user): bool
     {
-            info('viewAny called for ' . $user->email);
         // return true;
         return $user->can(self::PERMISSION_VIEW_LIST);
     }
