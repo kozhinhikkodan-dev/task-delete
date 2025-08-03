@@ -48,8 +48,8 @@ class UserSeeder extends Seeder
                 'username' => 'staff1',
                 'password' => bcrypt('password123'),
                 'min_task_per_day' => 2,
-                'max_task_per_day' => 2,
-                'available_days' => ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'],
+                'max_task_per_day' => 4,
+                'available_days' => ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday'],
                 'status' => 'active'
             ]
         );

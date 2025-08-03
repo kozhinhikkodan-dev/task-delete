@@ -5,7 +5,9 @@ namespace App\Services;
 use App\Models\Customer;
 use App\Models\Task;
 use App\Models\TaskType;
+use App\Models\User;
 use Carbon\Carbon;
+use Carbon\CarbonPeriod;
 use Illuminate\Support\Facades\DB;
 
 class CustomerTaskCreationService
@@ -98,16 +100,20 @@ class CustomerTaskCreationService
         string $countField
     ): array {
         $taskType = TaskType::where('code', $taskTypeCode)->where('status', 'active')->first();
-        
+
         if (!$taskType) {
             throw new \Exception("Task type '{$taskTypeCode}' not found or inactive");
         }
-
+        info("Task Type: " . $taskType->name);
+        info("Count: " . $count);
         // Calculate task dates distributed between service start and renewal dates
-        $taskDates = $this->calculateTaskDates($customer, $count);
-        
+        $taskDates = $this->calculateTaskDates($customer, $count, $assignedUserId);
+
         $tasks = [];
         $taskCounter = 1;
+
+        info("Creating " . count($taskDates) . " tasks for count field: " . $countField);
+        info("Task Dates: " . implode(', ', $taskDates));
 
         foreach ($taskDates as $taskDate) {
             $taskData = [
@@ -138,11 +144,10 @@ class CustomerTaskCreationService
      * @param float $count
      * @return array
      */
-    private function calculateTaskDates(Customer $customer, float $count): array
+    private function calculateTaskDates(Customer $customer, float $count, ?int $assignedUserId): array
     {
         $serviceStartDate = $customer->service_start_date ? Carbon::parse($customer->service_start_date) : Carbon::now();
         $serviceRenewDate = $customer->service_renew_date ? Carbon::parse($customer->service_renew_date)->subDay() : $serviceStartDate->copy()->addMonths(12);
-
         // If service renewal date is before or equal to start date, default to 12 months
         if ($serviceRenewDate->lte($serviceStartDate)) {
             $serviceRenewDate = $serviceStartDate->copy()->addMonths(12);
@@ -156,27 +161,41 @@ class CustomerTaskCreationService
             // Single task: place it at the start date
             $dates[] = $serviceStartDate->format('Y-m-d');
         } else {
-            // Multiple tasks: distribute evenly across the period
-            $interval = max(1, floor($totalDays / ($taskCount - 1)));
-            
-            for ($i = 0; $i < $taskCount; $i++) {
-                $taskDate = $serviceStartDate->copy()->addDays($i * $interval);
-                
-                // Ensure the last task doesn't exceed the renewal date
-                if ($i === $taskCount - 1) {
-                    $taskDate = $serviceRenewDate->copy();
+            $remainingTasks = $taskCount;
+            $startDate = $serviceStartDate->copy();
+            while ($remainingTasks > 0) {
+                // Multiple tasks: distribute evenly across the period
+                if (!isset($interval)) {
+                    $interval = max(1, floor($totalDays / ($remainingTasks - 1)));
                 }
-                
-                // Skip weekends (optional - move to next Monday)
-                if ($taskDate->isWeekend()) {
-                    $taskDate = $taskDate->next(Carbon::MONDAY);
+                $count = 0;
+                $period = CarbonPeriod::create($startDate, "$interval days", Carbon::parse($customer->service_renew_date));
+                foreach ($period as $taskDate) {
+                    if ($remainingTasks == 0) {
+                        break;
+                    }
+
+                    // Skip weekends (optional - move to next Monday)
+                    if ($assignedUserId) {
+                        $staff = User::find($assignedUserId);
+                        $isWorkDay = in_array($taskDate->format('l'), $staff->available_days);
+                    } else {
+                        $isWorkDay = !$taskDate->isWeekend();
+                    }
+                    if ($isWorkDay) {
+                        info("Task Date: " . $taskDate->format('Y-m-d'));
+                        $dates[] = $taskDate->format('Y-m-d');
+                        $count++;
+                        $remainingTasks--;
+                    }
                 }
-                
-                $dates[] = $taskDate->format('Y-m-d');
+                if ($count == 0 && $remainingTasks > 0) {
+                    $interval = 1;
+                }
             }
         }
 
-        return array_unique($dates);
+        return $dates;
     }
 
     /**
@@ -197,7 +216,7 @@ class CustomerTaskCreationService
         ];
 
         $taskName = $taskTypeNames[$countField] ?? 'Task';
-        
+
         return "Auto-generated task: {$taskName} {$taskNumber} of {$totalCount} for customer service period.";
     }
 
@@ -263,10 +282,11 @@ class CustomerTaskCreationService
     public function getExistingAssignments(Customer $customer): array
     {
         $assignments = [];
-        
+
         foreach (self::TASK_TYPE_MAPPING as $countField => $taskTypeCode) {
             $taskType = TaskType::where('code', $taskTypeCode)->first();
-            if (!$taskType) continue;
+            if (!$taskType)
+                continue;
 
             // Get the most recent assignment for this task type
             $task = Task::where('customer_id', $customer->id)
@@ -292,13 +312,13 @@ class CustomerTaskCreationService
      * @return array
      */
     public function handleCustomerUpdate(
-        Customer $customer, 
-        array $assignmentData, 
-        array $originalCounts, 
+        Customer $customer,
+        array $assignmentData,
+        array $originalCounts,
         array $originalDates = []
     ): array {
         $results = [];
-        
+
         try {
             DB::transaction(function () use ($customer, $assignmentData, $originalCounts, $originalDates, &$results) {
                 foreach (self::TASK_TYPE_MAPPING as $countField => $taskTypeCode) {
@@ -308,7 +328,8 @@ class CustomerTaskCreationService
                     $assignedUserId = $assignmentData[$assignmentField] ?? null;
 
                     $taskType = TaskType::where('code', $taskTypeCode)->where('status', 'active')->first();
-                    if (!$taskType) continue;
+                    if (!$taskType)
+                        continue;
 
                     // Get existing tasks for this customer and task type
                     $existingTasks = Task::where('customer_id', $customer->id)
@@ -382,7 +403,7 @@ class CustomerTaskCreationService
             $excessTasks = $existingTasks->where('status', 'pending')
                 ->sortByDesc('task_date')
                 ->take($existingCount - $currentCount);
-            
+
             foreach ($excessTasks as $task) {
                 $task->update(['status' => 'cancelled']);
             }
@@ -393,7 +414,7 @@ class CustomerTaskCreationService
         if ($assignedUserId) {
             $tasksToReassign = $existingTasks->where('status', 'pending')
                 ->where('assigned_to', '!=', $assignedUserId);
-            
+
             if ($tasksToReassign->count() > 0) {
                 foreach ($tasksToReassign as $task) {
                     $task->update(['assigned_to' => $assignedUserId]);
@@ -424,7 +445,7 @@ class CustomerTaskCreationService
     private function serviceDatesChanged(Customer $customer, array $originalDates): bool
     {
         return $customer->service_start_date != $originalDates['service_start_date'] ||
-               $customer->service_renew_date != $originalDates['service_renew_date'];
+            $customer->service_renew_date != $originalDates['service_renew_date'];
     }
 
     /**
@@ -433,10 +454,11 @@ class CustomerTaskCreationService
     private function redistributeTaskDates(Customer $customer, $tasks)
     {
         $taskCount = $tasks->count();
-        if ($taskCount === 0) return;
+        if ($taskCount === 0)
+            return;
 
         $newDates = $this->calculateTaskDates($customer, $taskCount);
-        
+
         foreach ($tasks->values() as $index => $task) {
             if (isset($newDates[$index])) {
                 $task->update(['task_date' => $newDates[$index]]);
@@ -464,4 +486,4 @@ class CustomerTaskCreationService
 
         return empty($messages) ? '' : 'Task updates: ' . implode('. ', $messages) . '.';
     }
-} 
+}

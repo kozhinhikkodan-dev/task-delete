@@ -28,7 +28,8 @@ class GrantAllPermissionsSeeder extends Seeder
         }
 
         // Grant all permissions to Administrator role
-        $adminRole->syncPermissions($allPermissions);
+        $adminPermissions = \Spatie\Permission\Models\Permission::whereNot('name','Show assigned tasks only')->get();
+        $adminRole->syncPermissions($adminPermissions);
         
         $this->command->info("✅ Granted {$allPermissions->count()} permissions to Administrator role:");
         

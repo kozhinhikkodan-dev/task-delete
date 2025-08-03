@@ -28,7 +28,7 @@ class RolesTableSeeder extends Seeder
 
             // Assign All Permissions to Administrator Role
             if ($key === 'admin') {
-                $permissions = \Spatie\Permission\Models\Permission::all();
+                $permissions = \Spatie\Permission\Models\Permission::whereNot('name','Show assigned tasks only')->get();
                 $role->syncPermissions($permissions);
                 $this->command->info("All permissions granted to Administrator role.");
             }
