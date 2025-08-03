@@ -173,7 +173,7 @@ class CustomerRequest extends FormRequest
         }
 
         $currentAutoTasksCount = Task::where('assigned_to', $staffId)
-            ->whereDate('task_date', $current->format('Y-m-d'))
+            // ->whereDate('task_date', $current->format('Y-m-d'))
             ->whereNotIn('status', ['cancelled', 'completed'])
             ->where('is_auto', true)
             ->count();
