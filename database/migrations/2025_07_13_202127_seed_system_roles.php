@@ -14,8 +14,8 @@ return new class extends Migration
     {
         $systemRoles = [
             'Administrator',
-            'Staff',
-            'Social Media Manager',
+            // 'Staff',
+            // 'Social Media Manager',
         ];
 
         foreach ($systemRoles as $roleName) {
@@ -33,8 +33,8 @@ return new class extends Migration
     {
         $systemRoles = [
             'Administrator',
-            'Staff',
-            'Social Media Manager',
+            // 'Staff',
+            // 'Social Media Manager',
         ];
 
         foreach ($systemRoles as $roleName) {
