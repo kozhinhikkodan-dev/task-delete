@@ -146,8 +146,8 @@ class CustomerRequest extends FormRequest
     {
         $user = User::find($staffId);
 
-        if (!$user || !$user->hasRole('Staff') || $user->status !== 'active') {
-            $fail('User is not a staff member or is not active.');
+        if (!$user || $user->status !== 'active') {
+            $fail('User is not active.');
         }
         // Convert to Carbon instances if not already
         $start = \Carbon\Carbon::parse($start);
