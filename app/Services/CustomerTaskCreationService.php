@@ -142,56 +142,158 @@ class CustomerTaskCreationService
      *
      * @param Customer $customer
      * @param float $count
+     * @param int|null $assignedUserId
      * @return array
      */
     private function calculateTaskDates(Customer $customer, float $count, ?int $assignedUserId): array
     {
         $serviceStartDate = $customer->service_start_date ? Carbon::parse($customer->service_start_date) : Carbon::now();
-        $serviceRenewDate = $customer->service_renew_date ? Carbon::parse($customer->service_renew_date)->subDay() : $serviceStartDate->copy()->addMonths(12);
+        $serviceRenewDate = $customer->service_renew_date ? Carbon::parse($customer->service_renew_date) : $serviceStartDate->copy()->addMonths(12);
+
         // If service renewal date is before or equal to start date, default to 12 months
         if ($serviceRenewDate->lte($serviceStartDate)) {
             $serviceRenewDate = $serviceStartDate->copy()->addMonths(12);
         }
 
-        $totalDays = $serviceStartDate->diffInDays($serviceRenewDate);
         $taskCount = (int) $count;
+        if ($taskCount <= 0) {
+            return [];
+        }
+
+        // Get available work days
+        $availableDays = $this->getAvailableWorkDays($assignedUserId);
+
+        // Generate all available work days in the date range
+        $workDays = $this->generateWorkDaysInRange($serviceStartDate, $serviceRenewDate, $availableDays);
+
+        if (empty($workDays)) {
+            // If no work days available, return the start date repeated
+            return array_fill(0, $taskCount, $serviceStartDate->format('Y-m-d'));
+        }
+
+        // Distribute tasks evenly across available work days
+        return $this->distributeTasksEvenly($workDays, $taskCount);
+    }
+
+    /**
+     * Get available work days based on assigned user or default work days
+     *
+     * @param int|null $assignedUserId
+     * @return array
+     */
+    private function getAvailableWorkDays(?int $assignedUserId): array
+    {
+        if ($assignedUserId) {
+            $staff = User::find($assignedUserId);
+            if ($staff && !empty($staff->available_days)) {
+                return $staff->available_days;
+            }
+        }
+
+        // Default work days (Monday to Friday)
+        return ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
+    }
+
+    /**
+     * Generate all available work days in the given date range
+     *
+     * @param Carbon $startDate
+     * @param Carbon $endDate
+     * @param array $availableDays
+     * @return array
+     */
+    private function generateWorkDaysInRange(Carbon $startDate, Carbon $endDate, array $availableDays): array
+    {
+        $workDays = [];
+        $currentDate = $startDate->copy();
+
+        while ($currentDate->lte($endDate)) {
+            $dayName = $currentDate->format('l'); // Full day name (Monday, Tuesday, etc.)
+
+            if (in_array($dayName, $availableDays)) {
+                $workDays[] = $currentDate->format('Y-m-d');
+            }
+
+            $currentDate->addDay();
+        }
+
+        return $workDays;
+    }
+
+    /**
+     * Distribute tasks evenly across available work days
+     *
+     * @param array $workDays
+     * @param int $taskCount
+     * @return array
+     */
+    private function distributeTasksEvenly(array $workDays, int $taskCount): array
+    {
+        $workDayCount = count($workDays);
+
+        if ($workDayCount === 0) {
+            return [];
+        }
+
+        if ($taskCount <= $workDayCount) {
+            // If we have more work days than tasks, distribute evenly
+            return $this->distributeSparseTasks($workDays, $taskCount);
+        } else {
+            // If we have more tasks than work days, some days will have multiple tasks
+            return $this->distributeDenseTasks($workDays, $taskCount);
+        }
+    }
+
+    /**
+     * Distribute tasks when there are more work days than tasks
+     *
+     * @param array $workDays
+     * @param int $taskCount
+     * @return array
+     */
+    private function distributeSparseTasks(array $workDays, int $taskCount): array
+    {
+        $workDayCount = count($workDays);
+        $step = $workDayCount / $taskCount;
         $dates = [];
 
-        if ($taskCount <= 1) {
-            // Single task: place it at the start date
-            $dates[] = $serviceStartDate->format('Y-m-d');
-        } else {
-            $remainingTasks = $taskCount;
-            $startDate = $serviceStartDate->copy();
-            while ($remainingTasks > 0) {
-                // Multiple tasks: distribute evenly across the period
-                if (!isset($interval)) {
-                    $interval = max(1, floor($totalDays / ($remainingTasks - 1)));
-                }
-                $count = 0;
-                $period = CarbonPeriod::create($startDate, "$interval days", Carbon::parse($customer->service_renew_date));
-                foreach ($period as $taskDate) {
-                    if ($remainingTasks == 0) {
-                        break;
-                    }
+        for ($i = 0; $i < $taskCount; $i++) {
+            $index = (int) round($i * $step);
+            // Ensure index is within bounds
+            $index = min($index, $workDayCount - 1);
+            $dates[] = $workDays[$index];
+        }
 
-                    // Skip weekends (optional - move to next Monday)
-                    if ($assignedUserId) {
-                        $staff = User::find($assignedUserId);
-                        $isWorkDay = in_array($taskDate->format('l'), $staff->available_days);
-                    } else {
-                        $isWorkDay = !$taskDate->isWeekend();
-                    }
-                    if ($isWorkDay) {
-                        info("Task Date: " . $taskDate->format('Y-m-d'));
-                        $dates[] = $taskDate->format('Y-m-d');
-                        $count++;
-                        $remainingTasks--;
-                    }
-                }
-                if ($count == 0 && $remainingTasks > 0) {
-                    $interval = 1;
-                }
+        return $dates;
+    }
+
+    /**
+     * Distribute tasks when there are more tasks than work days
+     *
+     * @param array $workDays
+     * @param int $taskCount
+     * @return array
+     */
+    private function distributeDenseTasks(array $workDays, int $taskCount): array
+    {
+        $workDayCount = count($workDays);
+        $tasksPerDay = (int) floor($taskCount / $workDayCount);
+        $remainingTasks = $taskCount % $workDayCount;
+
+        $dates = [];
+
+        foreach ($workDays as $index => $workDay) {
+            $tasksForThisDay = $tasksPerDay;
+
+            // Distribute remaining tasks to the first few days
+            if ($remainingTasks > 0) {
+                $tasksForThisDay++;
+                $remainingTasks--;
+            }
+
+            // Add the work day multiple times based on tasks needed
+            for ($i = 0; $i < $tasksForThisDay; $i++) {
+                $dates[] = $workDay;
             }
         }
 
