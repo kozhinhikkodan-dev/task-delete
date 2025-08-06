@@ -43,10 +43,9 @@ class CustomerTaskCreationService
     {
         $createdTasks = [];
         $errors = [];
-        $currentTaskLoad = []; // Track task load for this session
 
         try {
-            DB::transaction(function () use ($customer, $assignmentData, &$createdTasks, &$errors, &$currentTaskLoad) {
+            DB::transaction(function () use ($customer, $assignmentData, &$createdTasks, &$errors) {
                 foreach (self::TASK_TYPE_MAPPING as $countField => $taskTypeCode) {
                     $count = $customer->{$countField} ?? 0;
                     $assignmentField = self::ASSIGNMENT_MAPPING[$countField];
@@ -58,15 +57,8 @@ class CustomerTaskCreationService
                             $taskTypeCode,
                             $count,
                             $assignedUserId,
-                            $countField,
-                            $currentTaskLoad
+                            $countField
                         );
-
-                        // Update the current task load with the newly created tasks
-                        foreach ($tasks as $task) {
-                            $taskDate = $task['task_date'];
-                            $currentTaskLoad[$taskDate] = ($currentTaskLoad[$taskDate] ?? 0) + 1;
-                        }
 
                         $createdTasks = array_merge($createdTasks, $tasks);
                     }
@@ -98,7 +90,6 @@ class CustomerTaskCreationService
      * @param float $count
      * @param int|null $assignedUserId
      * @param string $countField
-     * @param array $currentTaskLoad
      * @return array
      */
     private function createTasksForType(
@@ -106,8 +97,7 @@ class CustomerTaskCreationService
         string $taskTypeCode,
         float $count,
         ?int $assignedUserId,
-        string $countField,
-        array $currentTaskLoad = []
+        string $countField
     ): array {
         $taskType = TaskType::where('code', $taskTypeCode)->where('status', 'active')->first();
 
@@ -117,7 +107,7 @@ class CustomerTaskCreationService
         info("Task Type: " . $taskType->name);
         info("Count: " . $count);
         // Calculate task dates distributed between service start and renewal dates
-        $taskDates = $this->calculateTaskDates($customer, $count, $assignedUserId, $currentTaskLoad);
+        $taskDates = $this->calculateTaskDates($customer, $count, $assignedUserId);
 
         $tasks = [];
         $taskCounter = 1;
@@ -154,10 +144,9 @@ class CustomerTaskCreationService
      * @param Customer $customer
      * @param float $count
      * @param int|null $assignedUserId
-     * @param array $currentTaskLoad
      * @return array
      */
-    private function calculateTaskDates(Customer $customer, float $count, ?int $assignedUserId, array $currentTaskLoad = []): array
+    private function calculateTaskDates(Customer $customer, float $count, ?int $assignedUserId): array
     {
         $serviceStartDate = $customer->service_start_date ? Carbon::parse($customer->service_start_date) : Carbon::now();
         $serviceRenewDate = $customer->service_renew_date ? Carbon::parse($customer->service_renew_date) : $serviceStartDate->copy()->addMonths(12);
@@ -187,7 +176,7 @@ class CustomerTaskCreationService
         $existingTaskLoad = $this->getExistingTaskLoad($assignedUserId, $serviceStartDate, $serviceRenewDate);
 
         // Distribute tasks considering existing load
-        return $this->distributeTasksWithLoadConsideration($workDays, $taskCount, $existingTaskLoad, $currentTaskLoad);
+        return $this->distributeTasksWithLoadConsideration($workDays, $taskCount, $existingTaskLoad);
     }
 
     /**
@@ -224,10 +213,9 @@ class CustomerTaskCreationService
      * @param array $workDays
      * @param int $taskCount
      * @param array $existingTaskLoad
-     * @param array $currentTaskLoad
      * @return array
      */
-    private function distributeTasksWithLoadConsideration(array $workDays, int $taskCount, array $existingTaskLoad, array $currentTaskLoad = []): array
+    private function distributeTasksWithLoadConsideration(array $workDays, int $taskCount, array $existingTaskLoad = []): array
     {
         $maxTasksPerDay = 4; // Configurable maximum tasks per day
         $dates = [];
@@ -236,8 +224,7 @@ class CustomerTaskCreationService
         $dayCapacity = [];
         foreach ($workDays as $workDay) {
             $existingCount = $existingTaskLoad[$workDay] ?? 0;
-            $currentCount = $currentTaskLoad[$workDay] ?? 0;
-            $availableCapacity = max(0, $maxTasksPerDay - ($existingCount + $currentCount));
+            $availableCapacity = max(0, $maxTasksPerDay - $existingCount);
             $dayCapacity[$workDay] = $availableCapacity;
         }
 
@@ -247,7 +234,6 @@ class CustomerTaskCreationService
 
         $remainingTasks = $taskCount;
         $currentDayIndex = 0;
-        $updatedCurrentLoad = $currentTaskLoad; // Track the load as we add tasks
 
         while ($remainingTasks > 0 && $currentDayIndex < count($sortedWorkDays)) {
             $currentDay = $sortedWorkDays[$currentDayIndex];
@@ -263,7 +249,6 @@ class CustomerTaskCreationService
 
                 $remainingTasks -= $tasksToAdd;
                 $dayCapacity[$currentDay] -= $tasksToAdd;
-                $updatedCurrentLoad[$currentDay] = ($updatedCurrentLoad[$currentDay] ?? 0) + $tasksToAdd;
             }
 
             $currentDayIndex++;
@@ -272,7 +257,7 @@ class CustomerTaskCreationService
         // If we still have remaining tasks and exhausted all work days, 
         // distribute them across the least loaded days
         if ($remainingTasks > 0) {
-            $dates = array_merge($dates, $this->distributeRemainingTasks($sortedWorkDays, $remainingTasks, $maxTasksPerDay, $existingTaskLoad, $updatedCurrentLoad));
+            $dates = array_merge($dates, $this->distributeRemainingTasks($sortedWorkDays, $remainingTasks, $maxTasksPerDay, $existingTaskLoad));
         }
 
         return $dates;
@@ -285,10 +270,9 @@ class CustomerTaskCreationService
      * @param int $remainingTasks
      * @param int $maxTasksPerDay
      * @param array $existingTaskLoad
-     * @param array $currentTaskLoad
      * @return array
      */
-    private function distributeRemainingTasks(array $workDays, int $remainingTasks, int $maxTasksPerDay, array $existingTaskLoad = [], array $currentTaskLoad = []): array
+    private function distributeRemainingTasks(array $workDays, int $remainingTasks, int $maxTasksPerDay, array $existingTaskLoad = []): array
     {
         $dates = [];
         $workDayCount = count($workDays);
@@ -303,8 +287,7 @@ class CustomerTaskCreationService
 
         foreach ($workDays as $index => $workDay) {
             $existingCount = $existingTaskLoad[$workDay] ?? 0;
-            $currentCount = $currentTaskLoad[$workDay] ?? 0;
-            $totalCurrentLoad = $existingCount + $currentCount;
+            $totalCurrentLoad = $existingCount;
 
             // Only add tasks if we haven't exceeded the limit
             $tasksForThisDay = $tasksPerDay;
@@ -710,7 +693,7 @@ class CustomerTaskCreationService
         if ($taskCount === 0)
             return;
 
-        $newDates = $this->calculateTaskDates($customer, $taskCount);
+        $newDates = $this->calculateTaskDates($customer, $taskCount, $tasks->first()->assigned_to);
 
         foreach ($tasks->values() as $index => $task) {
             if (isset($newDates[$index])) {
